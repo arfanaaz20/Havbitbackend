@@ -46,7 +46,7 @@ const {
   getFullHistory
 } = require("../controllers/orderController");
 
-const order = require("../models/Order");
+const order = require("../models/order");
 
 
 // const Order = require("../models/orderModel");
