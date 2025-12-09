@@ -7,6 +7,9 @@
     "dev": "nodemon server.js"
   },
   "dependencies": {
+    "@reduxjs/toolkit": "^2.11.0",
+    "axios": "^1.13.2",
+    "bcrypt": "^6.0.0",
     "bcryptjs": "^2.4.3",
     "cloudinary": "^1.41.3",
     "cors": "^2.8.5",
@@ -15,14 +18,15 @@
     "csv-parser": "^3.2.0",
     "csvtojson": "^2.0.14",
     "dotenv": "^16.6.1",
-    "express": "^4.21.2",
+    "express": "^4.22.1",
     "fast-csv": "^5.0.5",
     "json2csv": "^6.0.0-alpha.2",
-    "jsonwebtoken": "^9.0.0",
-    "mongoose": "^7.8.7",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^7.8.8",
     "multer": "^2.0.2",
     "multer-storage-cloudinary": "^4.0.0",
-    "razorpay": "^2.9.6"
+    "razorpay": "^2.9.6",
+    "react-redux": "^9.2.0"
   },
   "devDependencies": {
     "nodemon": "^2.0.22"

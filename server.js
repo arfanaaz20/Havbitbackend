@@ -1,76 +1,128 @@
+
+
+// const express = require("express");
+// const mongoose = require("mongoose");
+// const cors = require("cors");
+// const dotenv = require("dotenv");
+// const path = require("path");
+
+// dotenv.config();
+
+// const vendorAuthRoutes = require("./routes/vendorAuth");
+// const authRoutes = require("./routes/auth");
+// const vendorRoutes = require("./routes/vendorRoutes");
+// app.use("/api/vendor", vendorRoutes);
+
+
+
+// const app = express();
+
+// app.use(cors({ origin: "http://localhost:3000" }));
+// app.use(express.json());
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// app.use("/api/vendor", vendorAuthRoutes); // vendor login/signup
+// app.use("/api/auth", authRoutes);          // user/admin login/signup
+
+// const PORT = process.env.PORT || 7000;
+
+// mongoose.connect(process.env.MONGO_URI)
+//   .then(() => {
+//     console.log("✅ MongoDB Connected");
+//     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+//   })
+//   .catch(err => console.log("❌ MongoDB Error:", err.message));
+
+
+
+
+
+
+// const express = require("express");
+// const mongoose = require("mongoose");
+// const cors = require("cors");
+// const dotenv = require("dotenv");
+// const path = require("path");
+
+// dotenv.config();
+
+// const vendorRoutes = require("./routes/vendorRoutes");
+
+// const app = express();
+
+// // Middleware
+// app.use(cors({ origin: "http://localhost:3000" }));
+// app.use(express.json());
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+// // Routes
+// app.use("/api/vendor", vendorRoutes);
+
+// const PORT = process.env.PORT || 7000;
+
+// // MongoDB connection
+// mongoose.connect(process.env.MONGO_URI)
+//   .then(() => {
+//     console.log("✅ MongoDB Connected");
+//     app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
+//   })
+//   .catch(err => console.log("❌ MongoDB Error:", err.message));
+
+
+
+
+
+
+
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
-require("dotenv").config();
 const path = require("path");
 
 dotenv.config();
 
+const app = express();
 
+// Middleware
+// app.use(cors({ origin: "http://localhost:3000" }));
+// app.use(express.json());
+// app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
+// // Routes
+// app.use("/api/vendor", vendorRoutes);
+app.use(cors({ origin: "http://localhost:3000" }));
+app.use(express.json());
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+app.use("/api/customer", require("./routes/customerRoutes"));
+
+// Import All Routes
+const vendorRoutes = require("./routes/vendorRoutes");
 const orderRoutes = require("./routes/orderRoutes");
 const paymentRoutes = require("./routes/paymentRoutes");
-
-
-require("dotenv").config();
-const app = express();
-app.use(cors({ origin: "http://localhost:3000", })); // Allow React frontend
-app.use(express.json());
-
-// Routes
-app.use("/api/orders", require("./routes/orderRoutes"));
-
 const productRoutes = require("./routes/productRoutes");
-app.use("/api/orders", orderRoutes);
-// ✅ Add this
-const authRoutes = require("./routes/auth");
+const authRoutes = require("./routes/auth"); // ⭐ IMPORTANT
 const categoryRoutes = require("./routes/categoryRoutes");
 const subCategoryRoutes = require("./routes/subCategoryRoutes");
 
-
-
-//const userRoutes = require("./routes/userRoutes");
-app.use("/uploads", express.static(path.join(__dirname, "uploads")));
-
+// Use Routes
+app.use("/vendor", vendorRoutes);
+app.use("/api/orders", orderRoutes);
 app.use("/api/products", productRoutes);
-// app.use("/api/auth", authRoutes);
-
-                  // ✅ Use orders routes
-app.use("/api/auth", authRoutes);
+app.use("/api/auth", authRoutes);     // ⭐ ADMIN LOGIN + REGISTER ROUTE (correct place)
 app.use("/api/categories", categoryRoutes);
 app.use("/api/subcategories", subCategoryRoutes);
 app.use("/api/payment", paymentRoutes);
 
-//app.use("/api/users", userRoutes);
-
-
-
-// Server & MongoDB
+// Database + Server
 const PORT = process.env.PORT || 7000;
 
-mongoose.connect(process.env.MONGO_URI, {
-  useNewUrlParser: true,
-  useUnifiedTopology: true
-})
-.then(() => {
-  console.log("✅ MongoDB Connected");
-  app.listen(PORT, () => console.log(`🚀 Server running on port ${PORT}`));
-})
-.catch(err => {
-  console.log("❌ MongoDB Connection Error", err.message);
-});
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on port ${PORT}`)
+    );
+  })
+  .catch((err) => console.log("❌ MongoDB Error:", err.message));
