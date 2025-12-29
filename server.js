@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 
 /* =====================================================
-   ✅ CORS – FINAL WORKING (VERCEL + LOCAL)
+   CORS (VERCEL + FRONTEND)
    ===================================================== */
 const allowedOrigins = [
   "http://localhost:3000",
@@ -35,9 +35,8 @@ app.use((req, res, next) => {
   );
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
-  // 🔥 PRE-FLIGHT REQUEST FIX (MAIN ISSUE)
   if (req.method === "OPTIONS") {
-    return res.sendStatus(204);
+    return res.status(200).end(); // ✅ SERVERLESS SAFE
   }
 
   next();
@@ -69,15 +68,9 @@ app.use("/api/payment", require("./routes/paymentRoutes"));
 app.use("/api/vendor", require("./routes/vendorAuth"));
 app.use("/api/vendor/categories", require("./routes/vendorCategoryRoutes"));
 app.use("/api/vendor/products", require("./routes/vendorProductRoutes"));
-app.use(
-  "/api/vendor/subcategories",
-  require("./routes/vendorSubCategoryRoutes")
-);
+app.use("/api/vendor/subcategories", require("./routes/vendorSubCategoryRoutes"));
 app.use("/api/vendorOrders", require("./routes/vendorOrderRoutes"));
-app.use(
-  "/api/vendors/profile",
-  require("./routes/vendorProfileRoutes")
-);
+app.use("/api/vendors/profile", require("./routes/vendorProfileRoutes"));
 
 /* Admin */
 app.use("/api/admin", require("./routes/adminVendor"));
@@ -86,7 +79,7 @@ app.use("/api/admin", require("./routes/adminVendor"));
    TEST ROUTES
    ===================================================== */
 app.get("/", (req, res) => {
-  res.send("🚀 Havbit Backend Running");
+  res.send("🚀 Havbit Backend Running (Vercel)");
 });
 
 app.get("/health", (req, res) => {
@@ -96,28 +89,11 @@ app.get("/health", (req, res) => {
   });
 });
 
-app.get("/api", (req, res) => {
-  res.json({
-    name: "Havbit E-commerce API",
-    version: "1.0.0",
-  });
-});
-
 /* =====================================================
-   404 HANDLER
-   ===================================================== */
-app.use((req, res) => {
-  res.status(404).json({
-    success: false,
-    message: `Route not found: ${req.method} ${req.originalUrl}`,
-  });
-});
-
-/* =====================================================
-   GLOBAL ERROR HANDLER
+   ERROR HANDLER
    ===================================================== */
 app.use((err, req, res, next) => {
-  console.error("🔥 Server Error:", err);
+  console.error("🔥 ERROR:", err);
   res.status(500).json({
     success: false,
     message: "Internal Server Error",
@@ -125,20 +101,22 @@ app.use((err, req, res, next) => {
 });
 
 /* =====================================================
-   DB + SERVER (VERCEL SAFE)
+   🔥 MONGODB CONNECTION (SERVERLESS SAFE)
    ===================================================== */
-const PORT = process.env.PORT || 7002;
+let isConnected = false;
 
-mongoose
-  .connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log("✅ MongoDB Connected");
-    app.listen(PORT, () =>
-      console.log(`🚀 Server running on port ${PORT}`)
-    );
-  })
-  .catch((err) => {
-    console.error("❌ MongoDB Error:", err.message);
-  });
+async function connectDB() {
+  if (isConnected) return;
 
-module.exports = app;
+  await mongoose.connect(process.env.MONGO_URI);
+  isConnected = true;
+  console.log("✅ MongoDB Connected");
+}
+
+/* =====================================================
+   🔥 SERVERLESS HANDLER EXPORT (MAIN FIX)
+   ===================================================== */
+module.exports = async (req, res) => {
+  await connectDB();
+  return app(req, res);
+};
