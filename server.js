@@ -1,61 +1,84 @@
+
+
+
+
+
 const express = require("express");
 const mongoose = require("mongoose");
+const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
+
+const vendorOrderRoutes = require("./routes/vendorOrderRoutes");
+const vendorProfileRoutes = require("./routes/vendorProfileRoutes");
 
 dotenv.config();
 
 const app = express();
 
-/* =====================================================
-   CORS (VERCEL + FRONTEND)
-   ===================================================== */
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:5173",
-  "http://localhost:5174",
-  "http://localhost:5175",
-  "https://havbitadminfrontend.vercel.app",
-];
+/* ======================= CORS ======================= */
+app.use(
+  cors({
+    origin: [
+      "http://localhost:3000",
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "http://localhost:5175",
+      "https://havbitadminfrontend.vercel.app",
+    ],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+    credentials: true,
+  })
+);
 
-app.use((req, res, next) => {
-  const origin = req.headers.origin;
+app.options("*", cors());
 
-  if (allowedOrigins.includes(origin)) {
-    res.setHeader("Access-Control-Allow-Origin", origin);
+/* ======================= BODY PARSER ======================= */
+const rawBodySaver = (req, res, buf, encoding) => {
+  if (buf && buf.length) {
+    req.rawBody = buf.toString(encoding || "utf8");
   }
+};
 
-  res.setHeader(
-    "Access-Control-Allow-Methods",
-    "GET,POST,PUT,DELETE,OPTIONS"
-  );
-  res.setHeader(
-    "Access-Control-Allow-Headers",
-    "Content-Type, Authorization"
-  );
-  res.setHeader("Access-Control-Allow-Credentials", "true");
+app.use(
+  express.json({
+    limit: "50mb",
+    verify: rawBodySaver,
+  })
+);
 
-  if (req.method === "OPTIONS") {
-    return res.status(200).end(); // ✅ SERVERLESS SAFE
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "50mb",
+    verify: rawBodySaver,
+  })
+);
+
+/* ======================= JSON ERROR HANDLER ======================= */
+app.use((err, req, res, next) => {
+  if (err instanceof SyntaxError && err.status === 400 && "body" in err) {
+    return res.status(400).json({
+      success: false,
+      message: "Invalid JSON format",
+    });
   }
-
   next();
 });
 
-/* =====================================================
-   BODY PARSER
-   ===================================================== */
-app.use(express.json({ limit: "50mb" }));
-app.use(express.urlencoded({ extended: true, limit: "50mb" }));
-
-/* =====================================================
-   STATIC FILES
-   ===================================================== */
+/* ======================= STATIC ======================= */
 app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-/* =====================================================
-   ROUTES
-   ===================================================== */
+/* ======================= REQUEST LOG ======================= */
+app.use((req, res, next) => {
+  console.log(
+    `[${new Date().toISOString()}] ${req.method} ${req.originalUrl}`
+  );
+  next();
+});
+
+/* ======================= ROUTES ======================= */
 app.use("/api/customer", require("./routes/customerRoutes"));
 app.use("/api/auth", require("./routes/auth"));
 app.use("/api/products", require("./routes/productRoutes"));
@@ -69,54 +92,63 @@ app.use("/api/vendor", require("./routes/vendorAuth"));
 app.use("/api/vendor/categories", require("./routes/vendorCategoryRoutes"));
 app.use("/api/vendor/products", require("./routes/vendorProductRoutes"));
 app.use("/api/vendor/subcategories", require("./routes/vendorSubCategoryRoutes"));
-app.use("/api/vendorOrders", require("./routes/vendorOrderRoutes"));
-app.use("/api/vendors/profile", require("./routes/vendorProfileRoutes"));
+app.use("/api/vendorOrders", vendorOrderRoutes);
+app.use("/api/vendors/profile", vendorProfileRoutes);
 
 /* Admin */
 app.use("/api/admin", require("./routes/adminVendor"));
 
-/* =====================================================
-   TEST ROUTES
-   ===================================================== */
+/* ======================= TEST ROUTES ======================= */
 app.get("/", (req, res) => {
-  res.send("🚀 Havbit Backend Running (Vercel)");
+  res.send("🚀 Havbit Backend Running");
 });
 
 app.get("/health", (req, res) => {
   res.json({
     status: "OK",
+    uptime: process.uptime(),
+    database:
+      mongoose.connection.readyState === 1 ? "Connected" : "Disconnected",
     time: new Date().toISOString(),
   });
 });
 
-/* =====================================================
-   ERROR HANDLER
-   ===================================================== */
+app.get("/api", (req, res) => {
+  res.json({
+    name: "Havbit E-commerce API",
+    version: "1.0.0",
+  });
+});
+
+/* ======================= 404 ======================= */
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: `Route not found: ${req.method} ${req.originalUrl}`,
+  });
+});
+
+/* ======================= GLOBAL ERROR ======================= */
 app.use((err, req, res, next) => {
-  console.error("🔥 ERROR:", err);
+  console.error("🔥 Server Error:", err.stack);
   res.status(500).json({
     success: false,
     message: "Internal Server Error",
   });
 });
 
-/* =====================================================
-   🔥 MONGODB CONNECTION (SERVERLESS SAFE)
-   ===================================================== */
-let isConnected = false;
+/* ======================= DB + SERVER ======================= */
+const PORT = process.env.PORT || 7002;
 
-async function connectDB() {
-  if (isConnected) return;
-
-  await mongoose.connect(process.env.MONGO_URI);
-  isConnected = true;
-  console.log("✅ MongoDB Connected");
-}
-
-/* =====================================================
-   🔥 SERVERLESS HANDLER EXPORT (MAIN FIX)
-   ===================================================== */
-module.exports = async (req, res) => {
-  await connectDB();
-  return app(req, res);
-};
+mongoose
+  .connect(process.env.MONGO_URI)
+  .then(() => {
+    console.log("✅ MongoDB Connected");
+    app.listen(PORT, () =>
+      console.log(`🚀 Server running on port ${PORT}`)
+    );
+  })
+  .catch((err) => {
+    console.error("❌ MongoDB Error:", err.message);
+    process.exit(1);
+  });
