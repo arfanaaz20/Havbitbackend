@@ -26,7 +26,7 @@ app.use(
       "http://localhost:5175",
       "https://havbitadminfrontend.vercel.app",
       "https://habit-ecommerce-three.vercel.app",
-   https://havbit.in
+   "https://havbit.in",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
