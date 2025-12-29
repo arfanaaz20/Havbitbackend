@@ -8,7 +8,7 @@ dotenv.config();
 const app = express();
 
 /* =====================================================
-   ✅ CORS – VERCEL + LOCAL (NO ERROR, NO 500)
+   ✅ CORS – FINAL WORKING (VERCEL + LOCAL)
    ===================================================== */
 const allowedOrigins = [
   "http://localhost:3000",
@@ -27,7 +27,7 @@ app.use((req, res, next) => {
 
   res.setHeader(
     "Access-Control-Allow-Methods",
-    "GET, POST, PUT, DELETE, OPTIONS"
+    "GET,POST,PUT,DELETE,OPTIONS"
   );
   res.setHeader(
     "Access-Control-Allow-Headers",
@@ -35,7 +35,7 @@ app.use((req, res, next) => {
   );
   res.setHeader("Access-Control-Allow-Credentials", "true");
 
-  // 🔥 PRE-FLIGHT FIX
+  // 🔥 PRE-FLIGHT REQUEST FIX (MAIN ISSUE)
   if (req.method === "OPTIONS") {
     return res.sendStatus(204);
   }
@@ -96,8 +96,15 @@ app.get("/health", (req, res) => {
   });
 });
 
+app.get("/api", (req, res) => {
+  res.json({
+    name: "Havbit E-commerce API",
+    version: "1.0.0",
+  });
+});
+
 /* =====================================================
-   404
+   404 HANDLER
    ===================================================== */
 app.use((req, res) => {
   res.status(404).json({
@@ -107,10 +114,10 @@ app.use((req, res) => {
 });
 
 /* =====================================================
-   GLOBAL ERROR
+   GLOBAL ERROR HANDLER
    ===================================================== */
 app.use((err, req, res, next) => {
-  console.error("🔥 ERROR:", err);
+  console.error("🔥 Server Error:", err);
   res.status(500).json({
     success: false,
     message: "Internal Server Error",
@@ -118,7 +125,7 @@ app.use((err, req, res, next) => {
 });
 
 /* =====================================================
-   DB + SERVER (VERCEL FRIENDLY)
+   DB + SERVER (VERCEL SAFE)
    ===================================================== */
 const PORT = process.env.PORT || 7002;
 
