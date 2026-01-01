@@ -1,195 +1,97 @@
 
 
 
-
-
-const fs = require("fs");
-const csv = require("csv-parser");
-const { Parser } = require("json2csv");
+// controllers/productController.js
 const Product = require("../models/Product");
+const csv = require("csv-parser");
+const fs = require("fs");
 
-// ====================================
-// GET products
-// ====================================
+// GET all products
 exports.getProducts = async (req, res) => {
   try {
-    let { page = 1, limit = 10, search = "", sort = "", category, subcategory } = req.query;
-    page = Number(page);
-    limit = Number(limit);
-
-    let query = {};
-    if (search) {
-      query.$or = [
-        { name: { $regex: search, $options: "i" } },
-        { description: { $regex: search, $options: "i" } },
-        { restaurantName: { $regex: search, $options: "i" } }
-      ];
-    }
-
-    if (category) query.category = category;
-    if (subcategory) query.subcategory = subcategory;
-
-    let sortOption = { createdAt: -1 };
-    if (sort === "low") sortOption.newPrice = 1;
-    if (sort === "high") sortOption.newPrice = -1;
-
-    const total = await Product.countDocuments(query);
-    const products = await Product.find(query)
-      .populate("category")
-      .populate("subcategory")
-      .sort(sortOption)
-      .skip((page - 1) * limit)
-      .limit(limit);
-
-    res.json({
-      products,
-      totalPages: Math.ceil(total / limit),
-      currentPage: page,
-      total,
-    });
-
+    const products = await Product.find();
+    res.status(200).json(products);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ====================================
-// GET by ID
-// ====================================
+// GET product by ID
 exports.getProductById = async (req, res) => {
   try {
-    const product = await Product.findById(req.params.id)
-      .populate("category")
-      .populate("subcategory");
-
-    if (!product) return res.status(404).json({ message: "Not found" });
-
-    res.json(product);
-
+    const product = await Product.findById(req.params.id);
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    res.status(200).json(product);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ====================================
 // ADD product
-// ====================================
 exports.addProduct = async (req, res) => {
   try {
-    const {
-      name, category, description, restaurantName,
-      oldPrice, newPrice, quality, addToCart, stock, subcategory
-    } = req.body;
-
-    const imageUrl = req.files?.image ? req.files.image[0].path : "";
-    const logoUrl = req.files?.logo ? req.files.logo[0].path : "";
-
-    const newProduct = new Product({
-      name, category, description, restaurantName,
-      oldPrice, newPrice, quality, addToCart, stock,
-      subcategory: subcategory || null,
-      image: imageUrl,
-      logo: logoUrl
-    });
-
-    await newProduct.save();
-    res.status(201).json(newProduct);
-
+    const product = new Product(req.body);
+    await product.save();
+    res.status(201).json(product);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ====================================
 // UPDATE product
-// ====================================
 exports.updateProduct = async (req, res) => {
   try {
-    const updateData = { ...req.body };
-
-    if (req.files?.image) updateData.image = req.files.image[0].path;
-    if (req.files?.logo) updateData.logo = req.files.logo[0].path;
-
-    const updated = await Product.findByIdAndUpdate(req.params.id, updateData, {
-      new: true,
-      runValidators: true,
-    });
-
-    if (!updated) return res.status(404).json({ message: "Product not found" });
-
-    res.json(updated);
-
+    const product = await Product.findByIdAndUpdate(req.params.id, req.body, { new: true });
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    res.status(200).json(product);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ====================================
-// DELETE
-// ====================================
+// DELETE product
 exports.deleteProduct = async (req, res) => {
   try {
-    await Product.findByIdAndDelete(req.params.id);
-    res.json({ message: "Product deleted" });
-
+    const product = await Product.findByIdAndDelete(req.params.id);
+    if (!product) return res.status(404).json({ error: "Product not found" });
+    res.status(200).json({ message: "Product deleted" });
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ====================================
 // EXPORT CSV
-// ====================================
 exports.exportProductsCSV = async (req, res) => {
   try {
-    const products = await Product.find()
-      .populate("category")
-      .populate("subcategory");
-
-    const fields = [
-      "name",
-      "description",
-      "restaurantName",
-      "oldPrice",
-      "newPrice",
-      "quality",
-      "addToCart",
-      "stock",
-      "category.name",
-      "subcategory.name",
-    ];
-
+    const products = await Product.find();
+    const fields = Object.keys(products[0]._doc);
+    const { Parser } = require("json2csv");
     const parser = new Parser({ fields });
-    const csv = parser.parse(products);
+    const csvData = parser.parse(products);
 
     res.header("Content-Type", "text/csv");
     res.attachment("products.csv");
-    res.send(csv);
-
+    res.send(csvData);
   } catch (err) {
-    res.status(500).json({ message: err.message });
+    res.status(500).json({ error: err.message });
   }
 };
 
-// ====================================
 // IMPORT CSV
-// ====================================
 exports.importCSV = async (req, res) => {
-  try {
-    if (!req.file)
-      return res.status(400).json({ message: "No CSV file uploaded" });
+  if (!req.file) return res.status(400).json({ error: "CSV file required" });
 
-    let products = [];
-
-    fs.createReadStream(req.file.path)
-      .pipe(csv())
-      .on("data", (row) => products.push(row))
-      .on("end", async () => {
-        await Product.insertMany(products);
-        res.json({ message: "Products imported successfully" });
-      });
-
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
+  const results = [];
+  fs.createReadStream(req.file.path)
+    .pipe(csv())
+    .on("data", (data) => results.push(data))
+    .on("end", async () => {
+      try {
+        await Product.insertMany(results);
+        res.status(200).json({ message: "CSV imported successfully" });
+      } catch (err) {
+        res.status(500).json({ error: err.message });
+      }
+    });
 };
+ 
