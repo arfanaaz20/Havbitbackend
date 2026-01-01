@@ -26,6 +26,7 @@ app.use(
       "http://localhost:5175",
       "https://havbitadminfrontend.vercel.app",
       "https://habit-ecommerce-three.vercel.app",
+     "https://palegreen-wren-357459.hostingersite.com",
    "https://havbit.in",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
