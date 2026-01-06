@@ -1,41 +1,42 @@
+
+
+
 const express = require("express");
 const router = express.Router();
-
-const cloudUpload = require("../middleware/cloudUpload");
+const multer = require("multer");
 const vendorAuth = require("../middleware/vendorAuth");
+const controller = require("../controllers/vendorProductController");
 
-const {
-  getVendorProducts,
-  getVendorProductById,
-  addVendorProduct,
-  updateVendorProduct,
-  deleteVendorProduct
-} = require("../controllers/vendorProductController");
+const storage = multer.diskStorage({
+  destination: "uploads/",
+  filename: (req, file, cb) =>
+    cb(null, Date.now() + "-" + file.originalname),
+});
 
-/* PROTECTED */
+const upload = multer({ storage });
+
 router.use(vendorAuth);
 
-// GET ALL
-router.get("/", getVendorProducts);
+router.get("/", controller.getVendorProducts);
 
-// GET ONE
-router.get("/:id", getVendorProductById);
-
-// CREATE
 router.post(
   "/",
-  cloudUpload.fields([{ name: "image" }, { name: "logo" }]),
-  addVendorProduct
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "logo", maxCount: 1 },
+  ]),
+  controller.createVendorProduct
 );
 
-// UPDATE
 router.put(
   "/:id",
-  cloudUpload.fields([{ name: "image" }, { name: "logo" }]),
-  updateVendorProduct
+  upload.fields([
+    { name: "image", maxCount: 1 },
+    { name: "logo", maxCount: 1 },
+  ]),
+  controller.updateVendorProduct
 );
 
-// DELETE
-router.delete("/:id", deleteVendorProduct);
+router.delete("/:id", controller.deleteVendorProduct);
 
 module.exports = router;
