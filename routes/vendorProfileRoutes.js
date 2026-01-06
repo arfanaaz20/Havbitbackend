@@ -1,9 +1,12 @@
-const router = require("express").Router();
-const auth = require("../middleware/authMiddleware");
+
+
+const express = require("express");
+const router = express.Router();
+
+const vendorAuth = require("../middleware/vendorAuth");
 const controller = require("../controllers/vendorProfileController");
 
-router.get("/", auth, controller.getProfile);
-router.post("/", auth, controller.createProfile);
-router.put("/", auth, controller.updateProfile);
+// 🔥 PUT API
+router.put("/password", vendorAuth, controller.updatePassword);
 
 module.exports = router;
