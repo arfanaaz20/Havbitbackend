@@ -109,7 +109,7 @@ app.use("/api/vendorOrders", vendorOrderRoutes);
 app.use("/api/vendors/profile", vendorProfileRoutes);
 // app.use("/api/vendor", require("./routes/vendorProfileRoutes"));
 app.use("/api/admin/customers", adminCustomerRoutes);
-app.use("/api/vendor/customers", vendorCustomerRoutes);
+// app.use("/api/vendor/customers", vendorCustomerRoutes);
 app.use("/uploads", express.static("uploads"));
 app.use("/api/vendor", vendorProfileRoutes);
 app.use("/api/vendor", vendorRoutes);
