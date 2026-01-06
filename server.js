@@ -1,16 +1,29 @@
 
-
-
-
-
 const express = require("express");
 const mongoose = require("mongoose");
 const cors = require("cors");
 const dotenv = require("dotenv");
 const path = require("path");
+// const path = require("path");
+
 
 const vendorOrderRoutes = require("./routes/vendorOrderRoutes");
+// const vendorProfileRoutes = require("./routes/vendorProfileRoutes");
+const adminCustomerRoutes = require("./routes/adminCustomerRoutes");
+const vendorCustomerRoutes = require("./routes/vendorCustomerRoutes");
+const vendorAuth = require("./middleware/vendorAuth");
+// const vendorProfileRoutes = require("./routes/vendorProfileRoutes");
+
+
+const vendorRoutes = require("./routes/vendorRoutes");
 const vendorProfileRoutes = require("./routes/vendorProfileRoutes");
+
+
+
+
+
+
+
 
 dotenv.config();
 
@@ -19,15 +32,12 @@ const app = express();
 /* ======================= CORS ======================= */
 app.use(
   cors({
-    origin: [
+    origin: ["*",
       "http://localhost:3000",
       "http://localhost:5173",
       "http://localhost:5174",
       "http://localhost:5175",
-      "https://havbitadminfrontend.vercel.app",
-      "https://habit-ecommerce-three.vercel.app",
-     "https://palegreen-wren-357459.hostingersite.com",
-   "https://havbit.in",
+      "http://localhost:7002",
     ],
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization"],
@@ -97,6 +107,18 @@ app.use("/api/vendor/products", require("./routes/vendorProductRoutes"));
 app.use("/api/vendor/subcategories", require("./routes/vendorSubCategoryRoutes"));
 app.use("/api/vendorOrders", vendorOrderRoutes);
 app.use("/api/vendors/profile", vendorProfileRoutes);
+// app.use("/api/vendor", require("./routes/vendorProfileRoutes"));
+app.use("/api/admin/customers", adminCustomerRoutes);
+app.use("/api/vendor/customers", vendorCustomerRoutes);
+app.use("/uploads", express.static("uploads"));
+app.use("/api/vendor", vendorProfileRoutes);
+app.use("/api/vendor", vendorRoutes);
+
+app.use("/api/vendor", require("./routes/vendorProfileRoutes"));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
+
+
+
 
 /* Admin */
 app.use("/api/admin", require("./routes/adminVendor"));
