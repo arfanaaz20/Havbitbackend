@@ -1,49 +1,27 @@
+
+
+
 const jwt = require("jsonwebtoken");
 const Vendor = require("../models/VendorModel");
 
-const vendorAuth = async (req, res, next) => {
+module.exports = async (req, res, next) => {
   try {
-    /* =========================
-       Get Token
-    ========================= */
-    const authHeader = req.headers.authorization;
-
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({
-        message: "Authorization token missing"
-      });
+    const auth = req.headers.authorization;
+    if (!auth || !auth.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Token missing" });
     }
 
-    const token = authHeader.split(" ")[1];
-
-    /* =========================
-       Verify Token
-    ========================= */
+    const token = auth.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    /* =========================
-       Find Vendor
-    ========================= */
-    const vendor = await Vendor.findById(decoded.id).select("-password");
-
+    const vendor = await Vendor.findById(decoded.id);
     if (!vendor) {
-      return res.status(401).json({
-        message: "Vendor not found"
-      });
+      return res.status(401).json({ message: "Vendor not found" });
     }
 
-    /* =========================
-       Attach Vendor to Request
-    ========================= */
     req.vendor = vendor;
     next();
-
   } catch (err) {
-    console.error("VendorAuth Error:", err.message);
-    res.status(401).json({
-      message: "Invalid or expired token"
-    });
+    res.status(401).json({ message: "Invalid token" });
   }
 };
-
-module.exports = vendorAuth;
