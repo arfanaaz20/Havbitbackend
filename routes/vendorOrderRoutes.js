@@ -1,50 +1,23 @@
-// const express = require("express");
-// const router = express.Router();
-// const {
-//   getVendorOrders,
-//   updateVendorOrder,
-//   deleteVendorOrder,
-// } = require("../controllers/vendorOrderController");
-
-// // VENDOR ORDERS
-// router.get("/vendor/:vendorId", getVendorOrders);
-
-// // UPDATE ORDER
-// router.put("/:id", updateVendorOrder);
-
-// // DELETE ORDER (Vendor products only)
-// router.delete("/:id/:vendorId", deleteVendorOrder);
-
-// module.exports = router;
-
-
-
-
 
 
 const express = require("express");
 const router = express.Router();
+const vendorAuth = require("../middleware/vendorAuth");
 const {
-  getOrders,
-  getVendorOrders,
   createOrder,
+  getVendorOrders,
+  getOrderById,
   updateOrder,
   deleteOrder,
 } = require("../controllers/vendorOrderController");
 
-// ADMIN orders
-router.get("/", getOrders);
+/* WEBSITE / ADMIN */
+router.post("/", createOrder); // 🔓 website se order add
 
-// VENDOR orders
-router.get("/vendor/:vendorId", getVendorOrders);
-
-// CREATE order
-router.post("/", createOrder);
-
-// UPDATE order
-router.put("/:id", updateOrder);
-
-// DELETE order
-router.delete("/:id", deleteOrder);
+/* VENDOR PANEL */
+router.get("/my", vendorAuth, getVendorOrders);
+router.get("/:id", vendorAuth, getOrderById);
+router.put("/:id", vendorAuth, updateOrder);
+router.delete("/:id", vendorAuth, deleteOrder);
 
 module.exports = router;
