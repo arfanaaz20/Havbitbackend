@@ -1,69 +1,45 @@
+
+
+
 const mongoose = require("mongoose");
 
 const ProductSchema = new mongoose.Schema(
   {
-    name: {
-      type: String,
-      required: true,
-      trim: true,
-    },
+    name: { type: String, required: true },
+    description: String,
+    restaurantName: { type: String, required: true },
 
-    description: {
-      type: String,
-      default: "",
-    },
+    oldPrice: { type: Number, default: 0 },
+    newPrice: { type: Number, required: true },
+    quality: String,
+    stock: { type: Number, default: 0 },
 
-    restaurantName: {
-      type: String,
-      required: true,
-    },
-
-    oldPrice: {
-      type: Number,
-      default: 0,
-    },
-
-    newPrice: {
-      type: Number,
-      required: true,
-    },
-
-    quality: {
-      type: String,
-      default: "",
-    },
-
-    addToCart: {
-      type: Boolean,
-      default: false,
-    },
-
-    stock: {
-      type: Number,
-      default: 0,
-    },
-
-    image: {
-      type: String, // Cloudinary URL
-      default: "",
-    },
-
-    logo: {
-      type: String, // Cloudinary URL
-      default: "",
-    },
+    image: String,
+    logo: String,
+    gallery: [String],
 
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Category",
       required: true,
     },
-
     subcategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "SubCategory",
       default: null,
     },
+
+    religion: String,
+    productTypes: String,
+    flavors: String,
+    dietPreference: String,
+    nutrition: String,
+    materialTypes: String,
+    ingredients: String,
+    allergenInfo: String,
+    dietaryPreferences: String,
+    cuisine: String,
+    size: String,
   },
   { timestamps: true }
 );
