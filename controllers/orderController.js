@@ -1,8 +1,6 @@
 
 
 
-
-
 const Order = require("../models/order");
 
 // GET ALL ORDERS (ADMIN)
