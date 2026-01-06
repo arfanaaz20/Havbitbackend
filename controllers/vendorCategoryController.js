@@ -1,12 +1,16 @@
+
+
+
+
 const VendorCategory = require("../models/VendorCategory");
 
 /* =========================
-   GET Vendor Categories
+   GET ALL VENDOR CATEGORIES
 ========================= */
 exports.getVendorCategories = async (req, res) => {
   try {
     const categories = await VendorCategory.find({
-      vendor: req.vendor._id
+      vendor: req.vendor.id,
     }).sort({ createdAt: -1 });
 
     res.json(categories);
@@ -16,34 +20,35 @@ exports.getVendorCategories = async (req, res) => {
 };
 
 /* =========================
-   CREATE Vendor Category
+   CREATE CATEGORY
 ========================= */
 exports.createVendorCategory = async (req, res) => {
   try {
-    const { name, description } = req.body;
+    if (!req.body.name) {
+      return res.status(400).json({ message: "Name is required" });
+    }
 
-    const category = new VendorCategory({
-      vendor: req.vendor._id,
-      name,
-      description,
-      image: req.file ? req.file.path : null
+    const category = await VendorCategory.create({
+      vendor: req.vendor.id,
+      name: req.body.name,
+      description: req.body.description,
+      image: req.file ? req.file.path : null,
     });
 
-    const saved = await category.save();
-    res.status(201).json(saved);
+    res.status(201).json(category);
   } catch (err) {
     res.status(400).json({ message: err.message });
   }
 };
 
 /* =========================
-   GET Single Category
+   GET SINGLE CATEGORY
 ========================= */
 exports.getVendorCategoryById = async (req, res) => {
   try {
     const category = await VendorCategory.findOne({
       _id: req.params.id,
-      vendor: req.vendor._id
+      vendor: req.vendor.id,
     });
 
     if (!category) {
@@ -57,13 +62,13 @@ exports.getVendorCategoryById = async (req, res) => {
 };
 
 /* =========================
-   UPDATE Vendor Category
+   UPDATE CATEGORY
 ========================= */
 exports.updateVendorCategory = async (req, res) => {
   try {
     const updateData = {
       name: req.body.name,
-      description: req.body.description
+      description: req.body.description,
     };
 
     if (req.file) {
@@ -71,7 +76,7 @@ exports.updateVendorCategory = async (req, res) => {
     }
 
     const updated = await VendorCategory.findOneAndUpdate(
-      { _id: req.params.id, vendor: req.vendor._id },
+      { _id: req.params.id, vendor: req.vendor.id },
       updateData,
       { new: true }
     );
@@ -87,13 +92,13 @@ exports.updateVendorCategory = async (req, res) => {
 };
 
 /* =========================
-   DELETE Vendor Category
+   DELETE CATEGORY
 ========================= */
 exports.deleteVendorCategory = async (req, res) => {
   try {
     const deleted = await VendorCategory.findOneAndDelete({
       _id: req.params.id,
-      vendor: req.vendor._id
+      vendor: req.vendor.id,
     });
 
     if (!deleted) {
