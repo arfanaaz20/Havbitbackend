@@ -1,42 +1,39 @@
+
+
+
+
 const mongoose = require("mongoose");
 
-const VendorProductSchema = new mongoose.Schema(
+const vendorProductSchema = new mongoose.Schema(
   {
-    vendor: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "Vendor",
-      required: true
-    },
+    name: { type: String, required: true },
+    restaurantName: String,
 
-    name: { type: String, required: true, trim: true },
-    description: { type: String, default: "" },
-    restaurantName: { type: String, required: true },
+    oldPrice: Number,
+    newPrice: Number,
+    stock: Number,
 
-    oldPrice: { type: Number, default: 0 },
-    newPrice: { type: Number, required: true },
-
-    quality: { type: String, default: "" },
-    addToCart: { type: Boolean, default: false },
-    stock: { type: Number, default: 0 },
-
-    image: { type: String, default: "" },
-    logo: { type: String, default: "" },
+    cuisine: String,
+    size: String,
 
     category: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "VendorCategory",
-      required: true
+      required: true,
     },
 
     subcategory: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "VendorSubCategory",
-      default: null
-    }
+    },
+
+    vendor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Vendor",
+      required: true,
+    },
   },
   { timestamps: true }
 );
 
-module.exports =
-  mongoose.models.VendorProduct ||
-  mongoose.model("VendorProduct", VendorProductSchema);
+module.exports = mongoose.model("VendorProduct", vendorProductSchema);
